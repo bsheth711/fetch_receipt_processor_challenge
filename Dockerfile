@@ -9,6 +9,6 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN go build -v -o /usr/local/bin/app ./...
+RUN go build -v -o /usr/local/bin/service ./...
 
-CMD ["app"]
+CMD ["service"]
