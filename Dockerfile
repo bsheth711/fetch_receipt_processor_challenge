@@ -10,6 +10,6 @@ RUN go mod download && go mod verify
 
 COPY . .
 
-RUN go build -v -o /usr/local/bin/service ./...
+RUN go build -v -o /usr/local/bin/service service.go
 
 CMD ["service"]
