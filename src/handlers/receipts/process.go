@@ -1,7 +1,7 @@
 package receipts
 
 import (
-	"service/objects"
+	"service/src/objects"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

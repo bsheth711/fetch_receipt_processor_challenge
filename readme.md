@@ -9,8 +9,8 @@ docker run -p 8080:8080 -it --rm --name receipt-processor-container receipt-proc
 ```
 ## Send POST Request to /receipts/process
 ```
-curl -H "Content-Type: application/json" -X POST --data-binary @example1.json "http://localhost:8080/receipts/process"
+curl -H "Content-Type: application/json" -X POST --data-binary @examplePayloads/example1.json "http://localhost:8080/receipts/process"
 ```
 ```
-curl -H "Content-Type: application/json" -X POST --data-binary @example2.json "http://localhost:8080/receipts/process"
+curl -H "Content-Type: application/json" -X POST --data-binary @examplePayloads/example2.json "http://localhost:8080/receipts/process"
 ```
