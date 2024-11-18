@@ -26,7 +26,7 @@ This has a couple of benefits:
 
 1. You will notice that at no point in the calculatePoints() function can an error occur. 
 This means that if a valid receipt passes the conversion process, 
-correct calculation of points is guarranteed.
+correct calculation of points is guaranteed.
 Errors are detected earlier during the conversion process and if an error does occur, 
 an appropriate response is sent back to the client.
 2. Other relevant derived information to the receipt is also stored with the receipt in memory, 
