@@ -1,6 +1,7 @@
 package receipts
 
 import (
+	"hash/fnv"
 	"math"
 	"net/http"
 	"service/src/objects"
@@ -12,6 +13,10 @@ import (
 
 // in memory storage of receipt information
 var Receipts = make(map[string]objects.Receipt)
+
+// Stores hash for all received receipts.
+// Used to prevent duplicate requests.
+var UniqueReceipts = make(map[uint32]uint32)
 
 /*
 Handler for the endpoint /receipts/process.
@@ -30,6 +35,15 @@ func ProcessReceipts(c *gin.Context) {
 		return
 	}
 
+	hash := generateHash(&data)
+
+	_, ok := UniqueReceipts[hash]
+
+	if ok {
+		c.JSON(http.StatusBadRequest, gin.H{"code": "BAD_REQUEST", "message": "Duplicate Request."})
+		c.Error(err)
+	}
+
 	receipt, err := objects.Convert(&data)
 
 	if err != nil {
@@ -42,8 +56,37 @@ func ProcessReceipts(c *gin.Context) {
 	receipt.Points = calculatePoints(&receipt)
 
 	Receipts[receipt.Id] = receipt
+	UniqueReceipts[hash] = hash
 
 	c.JSON(http.StatusOK, gin.H{"id": receipt.Id})
+}
+
+/*
+Returns int32 hash for a string.
+*/
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
+
+/*
+Generates a unique hash based on an APIReceipt.
+*/
+func generateHash(receipt *objects.APIReceipt) uint32 {
+	var str string
+
+	str += receipt.Retailer
+	str += receipt.PurchaseDate
+	str += receipt.PurchaseTime
+	str += receipt.Total
+
+	for _, element := range receipt.Items {
+		str += element.ShortDescription
+		str += element.Price
+	}
+
+	return hash(str)
 }
 
 /*
@@ -55,6 +98,7 @@ Calculates points for a Receipt according to the following business logic:
 5. If the trimmed length of the item description is a multiple of 3, multiply the price by 0.2 and round up to the nearest integer. The result is the number of points earned.
 6. 6 points if the day in the purchase date is odd.
 7. 10 points if the time of purchase is after 2:00pm and before 4:00pm.
+8. 10 points if the character starts with the letter 'g' or 'G' only if the number of letters in the item description is not a multiple of 3
 */
 func calculatePoints(receipt *objects.Receipt) int64 {
 	var points int64 = 0
@@ -81,8 +125,14 @@ func calculatePoints(receipt *objects.Receipt) int64 {
 
 	// Rule 5
 	for _, element := range receipt.Items {
-		if len(strings.TrimSpace(element.ShortDescription))%3 == 0 {
+		trimmed := strings.TrimSpace(element.ShortDescription)
+
+		if len(trimmed)%3 == 0 {
 			points += int64(math.Ceil(element.Price * 0.2))
+		} else {
+			if trimmed[0] == 'G' || trimmed[0] == 'g' {
+				points += 10
+			}
 		}
 	}
 
